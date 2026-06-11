@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sube tu Placa Ecológica — UNSM FISI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0d1f0d;color:#e8f5e8;min-height:100vh}
+.hero{padding:2rem 1.5rem 1.5rem;text-align:center;border-bottom:1px solid #2d5a2d}
+.hero small{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#6dbf6d;display:block;margin-bottom:6px}
+.hero h1{font-size:24px;font-weight:700;color:#c8f5c8;margin-bottom:4px}
+.hero p{font-size:13px;color:#8dcf8d}
+.container{max-width:520px;margin:2rem auto;padding:0 1.5rem 3rem}
+.card{background:rgba(255,255,255,.07);border:1px solid #2d5a2d;border-radius:14px;padding:1.5rem;margin-bottom:1.25rem}
+.card-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6dbf6d;font-weight:600;margin-bottom:1rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:13px;color:#8dcf8d;margin-bottom:5px}
+.field input[type=text]{width:100%;background:rgba(255,255,255,.08);border:1px solid #2d5a2d;border-radius:8px;padding:10px 14px;font-size:14px;color:#e8f5e8;outline:none;transition:.2s}
+.field input[type=text]:focus{border-color:#5dbf5d;background:rgba(255,255,255,.12)}
+.field input[type=text]::placeholder{color:#4a7a4a}
+.drop-zone{border:2px dashed #2d5a2d;border-radius:10px;padding:2.5rem 1rem;text-align:center;cursor:pointer;transition:.2s;position:relative;margin-top:.25rem}
+.drop-zone:hover,.drop-zone.drag{border-color:#5dbf5d;background:rgba(255,255,255,.05)}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:36px;margin-bottom:8px}
+.drop-text{font-size:13px;color:#8dcf8d;line-height:1.6}
+.drop-text strong{color:#c8f5c8;display:block;font-size:14px;margin-bottom:2px}
+.preview-box{display:none;margin-top:1rem;text-align:center}
+.preview-box img{max-width:100%;max-height:180px;border-radius:8px;border:2px solid #2d5a2d}
+.preview-box p{font-size:12px;color:#6dbf6d;margin-top:6px}
+.alert{border-radius:8px;padding:10px 14px;font-size:13px;margin-top:1rem;display:none;line-height:1.5}
+.alert-err{background:rgba(220,50,50,.15);color:#f08080;border:1px solid rgba(220,50,50,.3)}
+.alert-ok{background:rgba(50,180,80,.15);color:#80f0a0;border:1px solid rgba(50,180,80,.3)}
+.btn{width:100%;padding:12px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;border:none;margin-top:.5rem}
+.btn-gen{background:#2d7a2d;color:#c8f5c8}
+.btn-gen:hover{background:#3a9a3a}
+.btn-gen:disabled{background:#1a3a1a;color:#4a7a4a;cursor:not-allowed}
+.btn-dl{background:#1a5c3a;color:#80f5c0;border:1px solid #2d8a5a}
+.btn-dl:hover{background:#226e47}
+.result-section{display:none}
+.result-section .card-title{color:#80f0a0}
+.result-canvas-wrap{border-radius:10px;overflow:hidden;border:1px solid #2d5a2d;margin-bottom:1rem}
+.result-canvas-wrap canvas{width:100%;display:block}
+.steps{margin-top:.75rem}
+.step-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;font-size:13px;color:#8dcf8d}
+.step-num{background:#2d5a2d;color:#c8f5c8;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(200,245,200,.3);border-top-color:#c8f5c8;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <small>Universidad Nacional de San Martín · FISI</small>
+  <h1>🌿 Placa Ecológica</h1>
+  <p>Proyecto de Identificación de Especies Arbóreas</p>
+</div>
+
+<div class="container">
+
+  <div class="card" id="formCard">
+    <p class="card-title">📋 Tus datos</p>
+    <div class="field">
+      <label>Nombre completo</label>
+      <input type="text" id="nombre" placeholder="Ej: Moisés Upiachihua Vela" oninput="checkReady()"/>
+    </div>
+    <div class="field">
+      <label>Código institucional</label>
+      <input type="text" id="codigo" placeholder="Ej: FISI-00028" oninput="checkReady()"/>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="card-title">🖼️ Imagen de tu placa</p>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".jpg,.jpeg,image/jpeg" onchange="handleFile(this)"/>
+      <div class="drop-icon">📁</div>
+      <div class="drop-text">
+        <strong>Haz clic o arrastra tu imagen aquí</strong>
+        Solo se aceptan archivos JPG o JPEG
+      </div>
+    </div>
+    <div class="preview-box" id="previewBox">
+      <img id="previewImg" src="" alt="vista previa de tu placa"/>
+      <p id="previewName"></p>
+    </div>
+    <div class="alert" id="fileAlert"></div>
+  </div>
+
+  <button class="btn btn-gen" id="btnGenerar" disabled onclick="generarPlaca()">
+    🔲 Generar mi placa con código QR
+  </button>
+
+  <div class="result-section" id="resultSection" style="margin-top:1.25rem">
+    <div class="card">
+      <p class="card-title">✅ Tu placa con código QR</p>
+      <div class="result-canvas-wrap">
+        <canvas id="resultCanvas"></canvas>
+      </div>
+      <button class="btn btn-dl" onclick="descargar()">
+        ⬇️ Descargar mi placa con QR
+      </button>
+      <div class="steps" style="margin-top:1rem">
+        <p style="font-size:12px;color:#6dbf6d;margin-bottom:8px">¿Qué hacer con tu imagen?</p>
+        <div class="step-row"><div class="step-num">1</div><span>Descarga la imagen con el botón de arriba</span></div>
+        <div class="step-row"><div class="step-num">2</div><span>Envíala a tu docente por WhatsApp o correo</span></div>
+        <div class="step-row"><div class="step-num">3</div><span>El QR ya está integrado — listo para imprimir</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+var imageSrc = null;
+var BASE_URL = 'https://40X0.github.io/placas-ecologicas';
+
+var dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', function(){ dz.classList.remove('drag'); });
+dz.addEventListener('drop', function(e){
+  e.preventDefault(); dz.classList.remove('drag');
+  if(e.dataTransfer.files.length) handleFile({files: e.dataTransfer.files});
+});
+
+function handleFile(input){
+  var file = input.files[0];
+  if(!file) return;
+  var ext = file.name.split('.').pop().toLowerCase();
+  var alert = document.getElementById('fileAlert');
+  if(ext !== 'jpg' && ext !== 'jpeg'){
+    alert.className = 'alert alert-err';
+    alert.style.display = 'block';
+    alert.textContent = '⚠️ Solo se aceptan archivos JPG o JPEG. Por favor sube tu imagen en ese formato.';
+    document.getElementById('fileInput').value = '';
+    imageSrc = null;
+    checkReady();
+    return;
+  }
+  if(file.size > 10 * 1024 * 1024){
+    alert.className = 'alert alert-err';
+    alert.style.display = 'block';
+    alert.textContent = '⚠️ El archivo es muy grande (máximo 10 MB).';
+    imageSrc = null;
+    checkReady();
+    return;
+  }
+  alert.style.display = 'none';
+  var reader = new FileReader();
+  reader.onload = function(e){
+    imageSrc = e.target.result;
+    var prev = document.getElementById('previewBox');
+    document.getElementById('previewImg').src = imageSrc;
+    document.getElementById('previewName').textContent = file.name + ' · ' + Math.round(file.size/1024) + ' KB';
+    prev.style.display = 'block';
+    checkReady();
+  };
+  reader.readAsDataURL(file);
+}
+
+function checkReady(){
+  var nombre = document.getElementById('nombre').value.trim();
+  var codigo = document.getElementById('codigo').value.trim();
+  document.getElementById('btnGenerar').disabled = !(nombre && codigo && imageSrc);
+}
+
+function slugify(str){
+  return str.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+function generarPlaca(){
+  var btn = document.getElementById('btnGenerar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Generando código QR…';
+
+  var nombre = document.getElementById('nombre').value.trim();
+  var slug = slugify(nombre);
+  var url = BASE_URL + '/' + slug + '.html';
+
+  var tmp = document.createElement('div');
+  tmp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+  document.body.appendChild(tmp);
+  new QRCode(tmp, {text: url, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.H});
+
+  setTimeout(function(){
+    var qrCanvas = tmp.querySelector('canvas');
+    var qrImg = tmp.querySelector('img');
+    var qrSrc = qrCanvas ? qrCanvas.toDataURL('image/png') : (qrImg ? qrImg.src : null);
+    document.body.removeChild(tmp);
+    if(!qrSrc){ showError(); return; }
+
+    var img = new Image();
+    img.onload = function(){
+      var W = img.naturalWidth, H = img.naturalHeight;
+      var canvas = document.getElementById('resultCanvas');
+      canvas.width = W; canvas.height = H;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      var qr = new Image();
+      qr.onload = function(){
+        // Coordenadas calibradas para plantilla UNSM-FISI 3000x1688
+        // QR debajo de la foto de la planta, esquina derecha
+        var scaleX = W / 3000;
+        var scaleY = H / 1688;
+        var QR_SIZE = Math.round(314 * scaleX);
+        var QR_X = Math.round(2520 * scaleX) - Math.round(QR_SIZE / 2);
+        var QR_Y = Math.round(1500 * scaleY) - Math.round(QR_SIZE / 2);
+        var pad = Math.round(10 * scaleX);
+        // Fondo blanco con borde sutil
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(QR_X - pad, QR_Y - pad, QR_SIZE + pad*2, QR_SIZE + pad*2);
+        ctx.drawImage(qr, QR_X, QR_Y, QR_SIZE, QR_SIZE);
+
+        document.getElementById('resultSection').style.display = 'block';
+        document.getElementById('resultSection').scrollIntoView({behavior:'smooth', block:'start'});
+        btn.disabled = false;
+        btn.innerHTML = '🔲 Generar mi placa con código QR';
+      };
+      qr.onerror = showError;
+      qr.src = qrSrc;
+    };
+    img.onerror = showError;
+    img.src = imageSrc;
+  }, 450);
+}
+
+function showError(){
+  var alert = document.getElementById('fileAlert');
+  alert.className = 'alert alert-err';
+  alert.style.display = 'block';
+  alert.textContent = 'Ocurrió un error al procesar la imagen. Intenta de nuevo.';
+  var btn = document.getElementById('btnGenerar');
+  btn.disabled = false;
+  btn.innerHTML = '🔲 Generar mi placa con código QR';
+}
+
+function descargar(){
+  var nombre = document.getElementById('nombre').value.trim();
+  var canvas = document.getElementById('resultCanvas');
+  var a = document.createElement('a');
+  a.download = 'placa-' + slugify(nombre) + '-QR.jpg';
+  a.href = canvas.toDataURL('image/jpeg', 0.95);
+  a.click();
+}
+</script>
+</body>
+</html>
