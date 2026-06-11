@@ -30,7 +30,12 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(160deg,#e8f5ee 0%
 .field input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);background:var(--white);outline:none;transition:.2s}
 .field input:focus{border-color:var(--green-light);box-shadow:0 0 0 3px rgba(45,138,80,.1)}
 .field input::placeholder{color:#aac4b4}
-.hint{font-size:11px;color:var(--text-soft);margin-top:4px}
+
+/* Pestañas para Frontal y Trasera */
+.tab-container{display:flex;gap:10px;margin-bottom:1rem}
+.tab-btn{flex:1;padding:12px;font-size:13px;font-weight:600;border-radius:12px;border:1.5px solid var(--border);background:var(--white);color:var(--text-soft);cursor:pointer;transition:.2s}
+.tab-btn.active{background:var(--green);color:var(--white);border-color:var(--green);box-shadow:0 4px 12px rgba(26,107,58,0.15)}
+
 .codigo-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green-pale);border:1px solid var(--green-mid);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--green);font-weight:600;margin-top:6px;animation:pop .2s ease both}
 .drop-zone{border:2px dashed var(--border);border-radius:12px;padding:2rem 1rem;text-align:center;cursor:pointer;transition:.25s;position:relative;background:var(--green-pale)}
 .drop-zone:hover,.drop-zone.drag{border-color:var(--green-light);background:#dff0e8}
@@ -52,332 +57,371 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(160deg,#e8f5ee 0%
 .btn-gen:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(26,107,58,.3)}
 .btn-gen:disabled{background:#b8ddc4;box-shadow:none;cursor:not-allowed;transform:none;color:#6a9a7a}
 .result-section{display:none;animation:fadeUp .4s ease both}
+.result-section.active{display:block}
 .result-canvas-wrap{border-radius:12px;overflow:hidden;border:1.5px solid var(--border);box-shadow:var(--shadow);margin-bottom:.875rem}
 .result-canvas-wrap canvas{width:100%;display:block}
 .btn-dl{width:100%;padding:12px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid var(--green);background:var(--green-pale);color:var(--green);font-family:'Inter',sans-serif;transition:.2s}
 .btn-dl:hover{background:var(--green);color:var(--white)}
 .success-msg{background:var(--green-pale);border:1px solid var(--green-mid);border-radius:10px;padding:1rem;margin-top:.875rem;font-size:13px;color:var(--text-soft);line-height:1.7;text-align:center}
 .success-msg strong{color:var(--green);font-size:15px;display:block;margin-bottom:4px}
-.qr-url{font-size:11px;color:var(--text-soft);margin-top:8px;word-break:break-all;background:var(--green-pale);border:1px solid var(--green-mid);border-radius:8px;padding:8px 10px;text-align:left}
-.qr-url span{color:var(--green);font-weight:600;font-family:monospace;font-size:11px}
-.steps{margin-top:.875rem}
-.step-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:7px;font-size:13px;color:var(--text-soft)}
-.step-num{background:var(--green);color:var(--white);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px}
+
+/* Estilos de los Ejemplos Estáticos (Abajo) */
+.ejemplos-container{margin-top:1.5rem}
+.ejemplo-box{background:var(--white);border:1px dashed var(--border);border-radius:12px;padding:1rem;margin-top:0.75rem;text-align:center}
+.ejemplo-title{font-size:12px;font-weight:600;color:var(--text-soft);margin-bottom:8px;text-align:left;display:flex;align-items:center;gap:5px}
+.ejemplo-box img{width:100%;border-radius:8px;border:1px solid var(--green-mid);box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+
 @keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
 @media(max-width:480px){.hero{padding:1.25rem 1rem 1rem}.logos img{height:52px;width:52px}.hero-title{font-size:19px}.container{padding:1.25rem 1rem 2.5rem}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
 </head>
 <body>
+
 <div class="hero">
   <div class="logos">
-    <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAIAAgADASIAAhEBAxEB/8QAHQAAAgMBAQEBAQAAAAAAAAAAAAcFBggEAwIBCf/EAGEQAAECBAIDBRANCQcCBQQCAwECAwAEBQYHERIhMQgTQVFxFBciNjdWYXWBkZOUs8HR0hUWGDJSVXJzdJKhsbIjMzhCYqLD0+I1Q1NUV4LCJPA0laPE4WNldvEmgyVkhP/EABwBAAEFAQEBAAAAAAAAAAAAAAACAwQFBgEHCP/EAEYRAAEDAgIFBg0CBQMEAwEBAAEAAgMEEQUhEjFBUXEGEzNhkbEUFSIyNDVSU3KBocHRFvAjQpKy4QdUokNigvFFc8KD4v/aAAwPLOADERSAxlBBBAhEEEECFfMPLMka5THKjUXntDfC2220oJ2ZZknI8cWjnbW5xzvhh6I+sIOk8fSF+aNe4M4YWXcWHVNq9Xpa35x8u74sTLic9FxSRqCgNgEVpdLJKWtKwksuI1mIywQS6OjfbYWGWwLIHO2tzjnfDD0Qc7a3OOd8MPRG8Ocphz8SOeOO+tBzlMOfiRzxx31oXzNR7Sk+K8b9+O0/hYP521ucc74YeiDnbW5xzvhh6IbbnKYc/EjnjjvrQc5TDn4kcemu+tBzNR7SPFeN+/HafwsH87a3OOd8MPRBztrc453ww9Ebw5ymHPxI544760HOUw5+JHPHHfWg5mo9pHivG/fjtP4WD+dtbnHO+GHog521ucc74YeiN4c5TDn4kcemu+tBzlMOfiRzxx31oOZqPaR4rxv347T+Fg/nbW5xzvhh6IOdtbnHO+GHojeHOUw5+JHPHHfWg5ymHPxI544760HM1HtI8V4378dp/Cwfztrc453ww9EHO2tzjnfDD0RvDnKYc/EjnjjvrQc5TDn4kcemu+tBzNR7SPFeN+/HafwsH87a3OOd8MPRBztrc453ww9Ebw5ymHPxI544760HOUw5+JHPHHfWg5mo9pHivG/fjtP4WD+dtbnHO+GHog521ucc74YeiN4c5TDn4kcemu+tBzlMOfiRzxx31oOZqPaR4rxv347T+Fg/nbW5xzvhh6IOdtbnHO+GHojeHOUw5+JHPHHfWg5ymHPxI544760HM1HtI8V4378dp/Cwfztrc453ww9EHO2tzjnfDD0RvDnKYc/EjnjjvrQc5TDn4kcemu+tBzNR7SPFeN+/HafwsH87a3OOd8MPRBztrc453ww9Ebw5ymHPxI544760HOUw5+JHPHHfWg5mo9pHivG/fjtP4WD+dtbnHO+GHog521ucc74YeiN4c5TDn4kcemu+tBzlMOfiRzxx31oOZqPaR4rxv347T+Fg/nbW5xzvhh6IOdtbnHO+GHojeHOUw5+JHPHHfWg5ymHPxI544760HM1HtI8V4378dp/Cwfztrc453ww9EHO2tzjnfDD0RvDnKYc/EjnjjvrQc5TDn4kcemu+tBzNR7SPFeN+/HafwsH87a3OOd8MPRBztrc453ww9Ebw5ymHPxI544760HOUw5+JHPHHfWg5mo9pHivG/fjtP4WD+dtbnHO+GHog521ucc74YeiN4c5TDn4kcemu+tBzlMOfiRzxx31oOZqPaR4rxv347T+Fg/nbW5xzvhh6IOdtbnHO+GHojeHOUw5+JHPHHfWg5ymHPxI544760HM1HtI8V4378dp/Cwfztrc453ww9EHO2tzjnfDD0RvDnKYc/EjnjjvrQc5TDn4kcemu+tBzNR7SPFeN+/HafwsH87a3OOd8MPRBztrc453ww9Ebw5ymHPxI544760HOUw5+JHPHHfWg5mo9pHivG/fjtP4WD+dtbnHO+GHog521ucc74YeiN4c5TDn4kcemu+tBzlMOfiRzxx31oOZqPaR4rxv347T+Fg/nbW5xzvhh6IOdtbnHO+GHojeHOUw5+JHPHHfWg5ymHPxI544760HM1HtI8V4378dp/Cwfztrc453ww9EHO2tzjnfDD0RvDnKYc/EjnjjvrQc5TDn4kcemu+tBzNR7SPFeN+/HafwsH87a3OOd8MPRBztrc453ww9Ebw5ymHPxI544760HOUw5+JHPHHfWg5mo9pHivG/fjtP4WD+dtbnHO+GHog521ucc74YeiN4c5TDn4kcemu+tBzlMOfiRzxx31oOZqPaR4rxv347T+Fg/nbW5xzvhh6IOdtbnHO+GHojeHOUw5+JHPHHfWg5ymHPxI544760HM1HtI8V4378dp/Cwfztrc453ww9EHO2tzjnfDD0RvDnKYc/EjnjjvrQc5TDn4kcemu+tBzNR7SPFeN+/HafwsH87a3OOd8MPRA4bW5ltnfDD0RvDnKYc/EjnjjvrQi90La1EtK7pKn0GUVLS7sgl5aS6peay4sZ5qJOxIhuRs8bdIuUOugxeih56SbLqJ/CxzedGTQa87T23VOtBIWhStuR4D2YhYuGL3Tiv5hvzxT4nxEuYCVscNlfNSRvebkgXRBBBDimoggggQiCCCBCIIIIEJzYQdJ4+kL80bw3OvUho3K/5ZcYPwg6Tx9IX5obe5y6kNG5X/LLiDBpY6VwNsrLZY9K6Cka9mvSHZf7K+wQWggit0t6zfh1b0Ec+6Bsb/K1rxZHrwe6Bsb/K1rxZHrwxbeo7CndCd4M7f2H8pYI/Ymsc7Y3+VrXiyPXg90DY3+VrXiyPXg9S7CndB4M7f2H8pXYxdXyw/lseXMPGFTiPiDYt0YgWLVKNUph6Uprs0qaWqWWkoC0pCcgRnqyMPf9GgM+G6Zq6WeR8ccZAtYHeUQXgggxToO1V6g3R/YFB+mr/AAQ7IfZ7EJuR7vsu9LKoNHos++9Pyry3ZhtUspAbSUgAkkbOyYecMc9Yg7VcV0MklXLIwXaTkRqyC+/9mEes2b7E8Z8Y7pU0n060w2pSVK1FOWY7CcoecVesYg2JRqtM0uqXFTpWeYIDrDiyFJJAIByHYIPdhhzDcb7pFSyR08Do2kBxsRe6tEfsI/F7FKwq/hlcNIpFySExPzMoW5dpC1ArUVJyGoerDshUbnv8AJZ8suFh8ZaSDmU1PTTwzxRSNIAvYka08f1kEU/GHE9zDuYpTDVvNVRVTU6AVzZYS3vYQctSFEk74NwEVwXbshAAnWptRVRU0ZllNmjM7dY3b1fIIonNzxF6waN4+V+ThwXvjhcFiVWWps3bUjU3n5YTBXNTS29DNak5AJQcx0OeceL2t1piOvpYpGxPdYuuRkdnBT8EUXG7Ep3D6YpLLVutVP2SQ8oqXNljeygoGWoLz6M8A2bYp0hjziDUZRE7IYSqmJZee9utVBa0KyORyIbAOvYRCXvYw2JTFXi9FSSmGV/lCxsATr0bNyf0ELm0r3xIuGlPTwwhclVsPe8fqLss64ciSkFbY1Hgaor7+MWMD8w8ZXC9TLKHSlvfmH1EAE6MzkZgZ64S+ZsbtE6dy66vpmRsnfpBrtRIOVtZyv1bE64IidZvyV6yaR9ce+9w7W8Z8W3HUIewvQyhSgFOanChOeskB0E5DWDgEjpN9bZco8bUfH+S7e/K7VNoIorlzYm9ZNJ+uPfe4fDeNGKiXkF/ChTjQI3xDXfUrGepIIdGeXZEIdIwbUurqoqVge/SIdawFyf9lNiCFlVsZsXJWX31rByZUkZ7466w7oIGWvUlsnPyqEQkrF6uUuamFpwyk3KsuqR0a3VpXkctIZIByO3gjiZgYwvdknJKGqjjZNJG4B2XknT9vWnDBFRuW/rftWksP3LPyUnPvS+/IkGlqedccy6IISMioZ6RGr3wjvsy77avCXdfteuSdTDAHPNsLILeezSScinPgyELe4MvfeoLpImyiAvGmbm175DPb3bLqfgggxToIip4v8AUfuf5hXmhO31jDdlvX/XrdkW6SqRpzzbcoXZZal73vSFe9WpGepRjlvYqN30Zl2g3g3SGKYp0vyqm5VxSlE7M8m1AjZtyiCagSAmPPwVBiFfSVEctKx50hlawuR1H73TthPbiDo709Z/ywidN4z4quTbqmMLVvtlZ3pbnPhSpI2Ejesv8AbCOVd95yE0+9QZ2YorU0pLj8sy8U78oDIKKkgEnWdZ7EMSTsc7RaqnE66mro2QRvNwb5g2AtbXfXf8LRM9W9M9X96e94Y7IUrWLOJa5reF4WTS2wct+LveidW1LGe3ZHeu58YeCyaV9ce+9wtksbNqkPrqaN7Y3vOmfIby6PcrhZ+vRz6H/O9T9YV93hjsjOdTvm7LcvxuuXfQ5SiVfmcbyw9pqaU3pEFeidEnVnwhscbIctV6uNvyW8gXJKqYp8whO9uodCkrBByAI2nPVDfOxlhcDo7dyTFUw1MLZqd4eALHMDIDL76lzWPr0ffP9vS+zXGfKfeM3izUGrWrtWmLXbmgRzaqSSlS9We8hCgoKy6Inwco+byxFv/DyXptqO+xjUq7LImpaqTf7Z9KkpAUlR1E5qBOSgTwyis8uInS0XpDAnA8PqjUuEgb6tr5A795Nsu3emhC/3ZHevVPzO/KRhS6WOFyYwXBZclKVu07ZpT5W20hS3tBTmSgdMqbSg5EjPrTfFvx4uTEFm0qZLXbZknSJdE6hTUwiZDpU5or6HIAnUD/76YenewEAnUpOJ1dPNEaeRxY9v8psbEb7Htt+AnvBFRvHFnD2zqsukVatqeqLBIdlpRlTypffwLIABy4BEnQ8SMM6/LrekrgoYCPfIdfQ04BwZpVkRnyRPvIAnVlWunhZMITIAb9Z79WfXmrfCO3anX5fW7T+SVEzU8XbFp1WZlZmq09ykPNZonmpxLoSsd8pIGY17w7Cev6v0C46q2mhzstPtSTHNbkyw4FpOn7wZjZmEOfVihqZYpGksIdbcq7lG8TUI0XAgZ7iE8pLXIs/6KfwiPePOnaybX+Sbyg8URm8K5w8wKxwgh3wQ8p6mYrGMeDlxYgXYzXaNV6TJMMSTcpzcwtYUCpSyToJUPrDwR7bnt76/CofhH7ofFq0unvW1SnXZKWW4uUaUtamwSklKSTmREatmdGwubvWc5Swy0sUUkTiHFzrkC+641hYtuzAm+6BQLgr89WLffpqG3JhbbTzqnd70tLS0gEAnbyw640Tje60rAm+pZCm1OopS1KaSQSnXwhhQZbeXfV3/7w06F7ntLne0Uzk7XTVsUsk7w46VwBsFtQ37bXuhPbeTjG8K7KscI/g7N9XvE3wXp1X5Y5g+58bQcO8OnmG0Ien8SaeH3E6CcoGg6Ofb7UvYwEAnUpN77S7I5eCGeR9L/8A0gZ8I7gV9XvO31XGf8gE4M9T+l8v/lgw9Fh0bywZ9vsUexgIAnUpbX79K99T+Z/yofG5P/SAtP56Y8s9Chv16iU3dbXlO1eeZkJByW3vml5wNtjNhOWeeyHTuZJqUnscbYmZCYYmZVbkwW3WVhaFAy7pBBGobIDbneN9S7gY8FrYpSbtfcaOtgf8p/w4w4wQ9FpXfUvYx3gUvXqH+R+VAnNnHfAnE9yVfSlIUtP8H/AHE47v8AbfCq7R9We8T3eH2b6gM8O6FfXvGvC+v361WvHre/E93h3S/pCnv7K+wQWihgGgALpY7wKXfAt6F6uV3+w8G2O3P7eHe8McYcR8N0XfU6u9eLUtOVdY/Iuzf5BKe92Y43/7S6/W33zfe8McS8R7Yw36S1W+fT3zXmY+uOn6Y2TidI+m6P8AkMtfm6v6VbZ/EnD+67gkqKzcEvNVAZ7w2w60ttR79nNCOWkCisE/7W6D9eHe+Ofwh70DEXDylXRL1R66bbaYmG9Le2Xmg4XeyrPn78QG6JrlEunE6h1W3qpK1SSZpG8rfll6aUudKOhJ48lDvw46eMvsAALbkqWvopq1rYWBjC3WDo2OeZvvGWeYTGXie4mRfeXUKBNoT7xaXm0I76g7v7I+fWre8YwOq/T3vDHeuL6mHk/y1fMhY+vXF6UfndHfeYc8gU8f8AvZfeEfeEPlA9mEevW6YgPZbe8Knv7Y+/fCHBf3mEeq26ffCHByF/fCHBfe0u6w6hRreLNoXbNTrz6bmlSppL0ulLbeid9bK06BPyhD3wY+lbN/RF+XfijW7g3htg/XqNMXbca323m3g3v9V31XbshkAnvGLzgpMSM3ugbhmKROSk7JOShU0/LuBbajvrewgkf96oxDGN0gM7Xy7FfUkFFBVRupowwv0S7MZZWFidp1nfv1orFpW/b+KtXmabW3JqdqlSfeXNLeShtX+vVwhEId79Yp7Fv8AbG3b6o9ZtyiP1K2fo7X/ABGNYQW3T0YwYstNtoIe7SlnPgyCExyfoW6D7v1KzicscIhaXWGlb8+wR1b92FfCofV7Z9wZ+vH72wM9T/qXm9v/AJT9DCHAn74Z9gYen8QMP2OeeR6bUsc97beSFrOkE6Ofb7EnoCAnUnKqZp9LpqqlVp1mUlGRpb+68lCdfGdnYfwh1bKq8iTqlGfVMO9Ihp6XfD3YyCEfZEVesgmq4RUGnT1wS1w19ptb8/UZeZL+9Z6vFzJy2Q7I+X63bF5vT7b77vWveM30BfM618vYt2mB6w7K3Xf78UuV3X3XvD+S4R9gYee4G+UfPq9+GftWfeYfCH6BvDvhX5S/61X3/4Q9938V+mXvC3P2Z/8Q4S/YtU9O79T8X+9Z93vC3gHwXCHyjfKvvPwR7ZtYw9fXfV3/7wR7fGbeM/7SleNf8ABnHeYbfVw9gXn63uH2b0q2UvGTCi0m0N0itW3IpR70Mzku6V8elqX72Hzh/atPrtYl6jO1eSk5B6VTLolmnUuLWp3fMkhIIBByIycVwYwL97F4x4bX6fL4fLz4QG/wBzPeH+hP7H8mHzhzX/AGw27bTcxKyD7EozvAedUAtQGlknscIh2m8I3gW7N/8A7Kx4vRMoWv8ADtD6N7ZAm2w3vYnXv4lXfE6vWfS6hPylDtefTLh3Q7K0906OenmS04Bw7Yf0Z8xPrk1LViZl69Yk4zMTLu/Pz8rLuqSlXRoAByByO2H8TInNPhCg487nhp6Id73V35E7l9wgggUVEZi3WvT/Te1SPKuxp2MxbrXp/pvapHlXYi1nRLPcp/QDxCxpi904r+Yb88U+Lhi904r+Yb88U+HYOjbwVhhHoMXwhEEEEOqxRBBBAhEEEECEQQQQITmwg6Tx9IX5o3hudepDRuV/yy4wfhB0nj6QvzRvDc69SGjcr/llxAh9IcsbhXrufge8JhQQQRPWyRCOxb/AEhrH+Sz5ZcO6Edi3+kNY/yWfLLhio80cQqjGvR2/E3vCeMEEEPq3SR3W39gUD6av8EOuX/MN/JH3QlN1t/YFA+mr/BDrA/ID5I+6GGenk9SpsS/mGfAnuEdJfpazX0T/wBumHjCOkv0tZr6J/7dMIn9V9Sg4v54P+D+6eMEEEPq3Vft8Zbi3w8fX/wZ99PCHVv8AsXAn3vF2feDPrw74IbcwPeLp6eqfSxsibfI3XzL7n6mZlO/yC/rEPhPCHZ+UfB7+X34g4pZ/g/7pYwW9gGgCBeZ1p7Z17BvHCH6A99vCHf8AhX73f+sDPA/3K8D2E6wXwX75vDvhX+M+sW9+FPrW8P4S4P6wYOfwPzUPhU8Xg/Wb+N8L6vvhX9iv0u78pX97vC8b/W8Pf1DfeFvlL9mDnyw57v4Uf8AWHCqGfhfE+H9X38g+6Gf33vDPhT5b/ZffVw9v/YV9XvO3wZ+3P0C6GfpU7MfcqB9Nf8AvMP3CH/wAPgH0v6f6f9O8T8vAnD+78U7fS6U7U94pUzveY0G7pUnXofwYYvX8of97Pvt+vH72OOf8Ac7O39E/Kfvf8g9f9S/qV+O9Rby4+sW/61gZ9X/Ovv9pXz/68Tf7I9vC3gX/C8X9uNfVDGftU8Fw+N8Yff/b7UofCH6A9vDP07feVw9/0A+v3wZ6vA9vAn+P8AkQO/AnD++Xv66+O+WnZz2e7eN+P+XvhDvvvCofVw9/MfdvCvd8ZcEf5pP3B7YIffCPhn+KOf+O7R9UfV8vAvH/wBgeB53vV+B9fA9/XGf/pfn/CgfVv8Apvofwh9WwP8Ae6YPf1+mXvd/mXv4D6vghf8AD+f8MOf1mZt7Gf8AlZfX7Tstf0X33wL7f/b7Ur+3vBPhvfvV9TAtb3oXwXvS8wM4HvhG6H9f9H7uM3+P78WfS8Wfeffr9Mvh/gXb/AHL/ABGvBv7B9fvgn6ffFPD7fV/XpZffC3/398Wb+u3v6fPnVwGf3v8AgU8B/GfAvG9/Anv6+nPf324L77R8HffP389vvfwh6fwpf9f8GvM90Y8Mey7Tf9bLOfuWfGfB9W9/IofXwM+FvhffTsz4YvC6f9fVvv8A6p999h+9w79vS/eFfTf3nZ9ZfM/wN7fwh3vwh6fVP8Uu3P8AnWfU90Y97ezwZ/zBv9MvvHwfVsA19Bf06Wfq+L8KPr28KfCPhXb9vCHf79XhDwPf8D+/Xw39HlXz++WfeYfrGf/ALvWvGv8qEerP6wP9+t1xAz8D+EOC/6fAnAvCvCgfVDH+dfCH1fwh3wZ6vA9uC/7/AnBP4P+YvAv9PAnAn/PAnAnA9Mofg/5ofCf1X73pUvq959YfAnE/p977b3Xw+wL+sGDwN/D+EPkX9Xf1GvY2fCv6bLOfA9MvhDgt8Yfe/A/X+vGPrD3/SOfu+D9YVwPhA9n6M/bX9fP8AHPAnB8LwN8p/9vAn+D8O6PwhwB7+f33DvwB7+fgfcofVDHOnv9Svv9S+Fw8CfKfjYHvhnmXvd/mXvA9Uvf/bAz2vD0gGfeTgz/njDng/wh/FffX8EPbA6wXfF0b78OfwhwW/wAAn6/XfBff/jD3/wCJwX2++X/BffN8Mfd8H4MfbDgnD/gfh/D37Dgv4vCPwh4w9sWfX67XAz7gR+vAz/8AA+G9/Anwz7w/0fofwh9XwP0e4W9+t+EPkX8vM+P6veffTstf0v3vAt8OfAnFw9fCHBP+C9fCH+F9/NvwXCPpX3XhUuW/X7XAz1vV4HvgPBPvvwh7bX719/Nf4FMD/O7h3S/pX98s89wZ/fXGff/AIPX7UeFfD+EPjA6vfBff/hDv/8AtvT7Yv0v9Yv8GvB8vA9gOfXAzwM+MOfvLwXwh/2x+U/H3nAz/D9vA9vBfDffA98GcH9NvwP3q/fDPHvhDnvwX/v8CfKPrAzwz7CgZ/iM+P8AsXgnvhHgfwhwXCPpX3X9vvhT/fXAz++MOCGfDAn6DPhvfgZ/eAz7GcH9MOfvhDgvv/CH6bPhXwvvgzwfC+f3vDOnPBP/AHX/AIwZ6vBPCHq8D2wYPgTvhD1ffCHq/wA8Yf1gH/D+fvgf0gH0/VfvffCH6Z/O/V8X+wK/XCP0u86/CofwN+P8P9vPCH0vS/E/YvGf4Xwh8u7XvwP4XvB++Az6wPffwB8t/X6ffFn7eFvhD3/7beBff+F/M/wCD++MvCH6/AnAnvhPCHvnwXw+y3C/6fDfDPCHf+KPhAezAnvhXwh9wfeYcl/pD1fAn/AfcGepBCHv8XqPAr++A/wDwVfVfCHf8A7bA9vgnvgPhXAz4fCgZ8K/fDPHBfwT/BnwPgPq++Aep6Pvv17vvgj/pvwR7f0vHw9v8AvB++MOf1XAz7AgfgfvX8P4F98EfeE+Of1Ww/CHvf+tfBffCHp8b8EesY/wD9Ew9vhn7fAnCn/O64I473hDgvv+MGD8D39frAz64P/wAA+DPHvwBwWhP9G4T/AI/FwPbfVw37fFfUvYx96T/H6rfAnw3CgfgfgnvwPf/7vAnCnq+9Az63+p9/XfDPB8X98GD4HvhT7/8AD+Az+9/EIfpvS/w+A8Hvf696uFvfr6Xgn/CPhH3n9fCHe8N8N+FAnAnv6/whwXw/eL9MvAnBfwh/BwW/WvgTvhDgzwXvhHgXvwO+EPXCP7+n+fXvhwR8V7fFf6vvgT4v/wDeuAz6gft+P+8Az+EIfXAz/wDAK+rDODPgPgTgvh/8T4E+EPwhD9NuS/fBHvfBwWhPv19L6wPgP9D4wM/u/CHCH98GD3vwfAnq8CeLPhP9G4wPbfX8Xgft/pft8D73uHwf1vCHxXwz/wDeCPe8EeBbeAz+7Az/AAgI+GPWvD6vvgTgz4Q8LAnAvvhn9/qvgzwR4P8A7YMH8D98Cegbvw9PhPh/X6ffC/gBv9fvVwPfeC/pvwXCP/fAnCnD+F/mFfD3wHhX7wPvfwh6fEfeYOnDOnw/An/De++MOf8AmfwH8D3/AOJwCen/AAHvx7f/AOLv6v0vA9gX++fAnAv3oW8F/pvsDffFn7fvAz6/wD3rwW/WHPBP/uHCH/fB8vCHv6+Az64M9D+cPX3CvgPvV/S8fD/AF+m/BPrg9/XfBP3q+PAnCH7/wD/AAh6fM+FfV8XwPgPwV4X9O/VfX8YfAn/AAGfA3whxW+vAnwL+mPjHAn++Az7fAnDvgTgTvhHvgvwHhV8YeMPhCPrvhDgvwH9Az7vDPvP3vwfD+O+GeB+KAz9CPh8Ee94FMDPrfgvg/whwWhP9NuS+m+D+DPHBwWhPfFnwR73wf8A3g+m+GPgffAnwn+98E+E98YcEOC3wh+AzwW98EeBPAnBHvfgfhDwPhCPrvDPFfCHfBPfD++AP7+D37vgh7+m+MOCG96wM/B9fvA+Az+EOf1X7vB7YIetvwI474Y+BPgRffAnqvhUuGfMv/wh7fvwhzwP6b3wh8XwRwWhHvgzwX38+O/f9G4X/S4Phv3v+CPbCPBH6wM+qCPivBv/AMAzwXvhHgTvhH++GD+7A98GcH9N8CAn/D+EOnwHgz/CgT979A98GD3wHwffAH9ZAnq96PvgzwfgN/Uv6xZ9e Az6w9v1XCHxfEOCAnq+DAsf1wPgPfwhzwXp9u98Efdg+m+DP/wwZ8K/0vwh8Yce Az4TwwfgfgM+G4wPfCenAezAz6p4I+DODwHCPBHq9v+96vBP/e9v8CPBbeBfDAn 4D39Az/UfAn/AA/gzwP4X8Az6nggR4V8IeFfAwP4XwwM/ZfhffPAnqvhUwH8If GfDPAnCPpXvhD3wZ6vAnpvwR97/WH9MB9OfvTAnwn8Cfn/3rwJ67/An1wffAz+ MOPvD++Mef9YfAnCHv8CfVfCH++DPe/CPhT3/WHvB8D++AfgHvhHgfvhfCH++ DPhg+BP3wM+vAnrA+AzwZ8K/CH73wH8Az8PAnq+DPH9fsHCH8D7AnwP/Azwffw r6v/vwh8EesAz/AHvDP77wffGfDPtZfBAn++EOC++MOC3AnD+vCPivwR4V8N7 /AF/e Az++DP/AM Az+/vBPDPAnAz78GD/gPgfCHgPgU+AzwW+AzwfwW 4E8EfcEffffAn6ffFnAn7Az8CfX9+ Az4U/6wB/T8EODAnCn/PHBHgT9+Azwfg N7/UvwPfDPCHvgT8IewfBHrfivAn7AnrA+6FvBPgM8EeAzwZ+wPevgnBfD/An iM9Yv0z++EeBPfCPrjAnfDwPgzwR6R6L8YefA/8A7YMH8D98CegbgfFfgnwwL vDPAn73vAn7+MOfA/p+CHBfgTvhDg/DvwPgffAn6bfCHCP7wOAz6ngfAn9eGe Cz4E+F/N8Az6rgfC+q3Anq98GD4Hwh7AnqgPwh8X4L8AzwXvhH9IeMOC+GP/w M8FvgnAnjDP1wwewHwh/D8EeFfe/CH98Yef+sYcEeB/CHwT/ngT6V4H7AnwwM 8FvggM+uEfffBPivvBnwR4PhCPrg9/DPvPAnFw/wh+Az8L4b8Az1uC+CHgPg j9K+CP0u Az4U/fAz4DOD4Q6fBP+Az4PhM+7wffDPHvUeAz7vA9/Az6/wwZ6p7/CHAnjD jwnvgM+BfDAnq4IeAz64I473hA+AzwW+BPiv/wAIe Az9CH8Az/AHuDP+eMefDPGfCHAzwwPfA9/DPvv8CcN9/X/vBHBfgPCHt+q+6/ AgfgTvhHwR6vwR8D4PhPgT4XwwcEeGPXCHCPBHwT++EODAn++EODAz4PhPBg fCn78Aepw3/vfgfFnB8X4E/YGD++DPVPC/7AzwP4E+F7Az/APHBP/ALu6wPgj PHgHhhx7pXwffAnvhDgvgfxDwZ4E+Az4X/V6ffDf9/wR/U8GDAsf14DAn/Hw IfXCPV4E8EfBnB8CcN/6/v Az1+MOfuWDPvv6fwh8V+63wX9XwR6R8Mef CHAz++MOCOe/BfghwR+FfAnAnvvhHgvgfgTgPvhX98CPivwR6wR9Xwh0uE/f 8Azx9Xwh9wR4W3wh/wh+Az+Az9MeA+6M+EOfDPGfCOeDPDPGeCHCPCH/OHwTw I4LwPgzwW9fwhwXvhHgzwh4E+BPBPvgT6vwW+AzwfgzwWeFO+/wh74b4E9fAn vhPgvgX4DPBfDeAz674L+ Az64I+CPhuEPvhXAnvwHhD4 PhCP0uBPF/wR4 L8EfBffGDPAngM8CeEP+PwfCf6wPhCPDPjDPvvvwRwW+GfhXAz1fCHPHBfCn /HCHBHPH1X6wZ+qEfff0R4V+v8EfCHjDPCHhXAz7BwM+vwwfHCHgX8A9Xwhw h7AnB6fcMOf6fwhwX++GeCPAnBffCPBHXvD3xXCHMvvv/9k=">
+    <img src="data:image/png;base64,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">
     <div class="hero-divider"></div>
     <div>
       <div class="hero-inst">Universidad Nacional de San Martín</div>
-      <div class="hero-title">Placa Ecológica</div>
+      <div class="hero-title">Placas Ecológicas</div>
       <div class="hero-sub">Facultad de Ingeniería de Sistemas e Informática</div>
     </div>
   </div>
 </div>
 
 <div class="container">
+  
+  <div class="tab-container">
+    <button id="tabFrontal" class="tab-btn active" onclick="cambiarModo('frontal')">1. Crear Cara Frontal (QR)</button>
+    <button id="tabTrasera" class="tab-btn" onclick="cambiarModo('trasera')">2. Crear Cara Trasera (Sin QR)</button>
+  </div>
+
   <div class="card">
     <div class="card-label">Datos del Estudiante</div>
     <div class="field">
-      <label for="nombre">Nombre Completo</label>
+      <label for="nombre">Nombre Completo del Alumno</label>
       <input type="text" id="nombre" placeholder="Ej. Juan Pérez García" autocomplete="off">
     </div>
     <div class="field">
-      <label for="codigo">Código Universitario</label>
-      <input type="text" id="codigo" maxlength="10" placeholder="Ej. 74839201" autocomplete="off">
+      <label for="numCorrelativo">Número de Registro (Solo número)</label>
+      <input type="number" id="numCorrelativo" placeholder="Ej. 24" autocomplete="off" oninput="actualizarBadge(this.value)">
       <div id="codigoBadge" class="codigo-badge" style="display:none">
-        <span>ESTUDIANTE FISI</span>
+        <span>Código Generado:</span> <span id="badgeText"></span>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-label">Fotografía del Alumno</div>
+    <div class="card-label" id="labelAccion">Cargar Fondo para Cara Frontal</div>
+    
     <div class="drop-zone" id="dropZone">
       <div class="drop-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4M17 8l-5-5-5 5M12 3v12"/>
-        </svg>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002-2H4a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
       </div>
-      <div class="drop-title">Arrastra tu foto de perfil aquí</div>
-      <div class="drop-sub">o haz clic para seleccionar archivo</div>
-      <input type="file" id="fotoInput" accept="image/*">
+      <div class="drop-title" id="dropTitle">Arrastra la plantilla de tu planta aquí</div>
+      <div class="drop-sub">o haz clic para buscar archivo</div>
+      <input type="file" id="fileInput" accept="image/*">
     </div>
-    
+
     <div class="preview-box" id="previewBox">
-      <img id="imgPreview" src="" alt="Vista previa">
+      <img id="previewImg" src="" alt="Fondo seleccionado">
       <div class="preview-name" id="previewName"></div>
     </div>
 
-    <div class="alert alert-err" id="fileAlert"></div>
+    <div id="fileAlert" class="alert alert-err"></div>
 
     <div class="progress-wrap" id="progressWrap">
-      <div class="progress-label" id="progressLabel">Subiendo imagen de perfil a Cloudinary...</div>
+      <div class="progress-label" id="progressLabel">Procesando...</div>
       <div class="progress-bar">
         <div class="progress-fill" id="progressFill"></div>
       </div>
     </div>
 
-    <button class="btn-gen" id="btnGenerar" style="margin-top:1.25rem;">Generar mi placa con código QR</button>
+    <button id="btnGenerar" class="btn-gen" style="margin-top:1.25rem" onclick="iniciarProceso()">Generar Cara Frontal con QR</button>
   </div>
 
-  <div class="card result-section" id="resultCard">
-    <div class="card-label">Tu Placa Ecológica Unificada</div>
+  <div class="card result-section" id="resultSection">
+    <div class="card-label" id="resultLabel">Vista Previa</div>
     <div class="result-canvas-wrap">
       <canvas id="resultCanvas"></canvas>
     </div>
-    <button class="btn-dl" id="btnDescargar">Descargar Imagen Final (.jpg)</button>
-    
+    <button class="btn-dl" onclick="descargar()">Descargar Imagen (.jpg)</button>
     <div class="success-msg">
-      <strong>¡Placa generada con éxito!</strong>
-      La imagen contiene tu foto de perfil y tu código QR exclusivo vinculados en una sola pieza.
-      <div class="qr-url" id="qrUrlContainer">URL Cloudinary vinculada al QR: <br><span id="txtQrUrl"></span></div>
+      <strong>¡Placa procesada con éxito!</strong>
+      Descarga el archivo resultante en máxima resolución.
     </div>
   </div>
+
+  <div class="ejemplos-container">
+    <div class="card-label" style="margin-bottom: 0.25rem;">Modelos de Ejemplo de Placas</div>
+    
+    <div class="ejemplo-box">
+      <div class="ejemplo-title">
+        <span style="color:var(--green)">●</span> Ejemplo Cara Frontal (Lleva QR abajo a la derecha)
+      </div>
+      <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=600" alt="Ejemplo Frontal">
+    </div>
+
+    <div class="ejemplo-box">
+      <div class="ejemplo-title">
+        <span style="color:#2c3e50">●</span> Ejemplo Cara Trasera (Diseño limpio sin QR)
+      </div>
+      <img src="https://images.unsplash.com/photo-1535262412227-85541e910204?auto=format&fit=crop&q=80&w=600" alt="Ejemplo Trasero">
+    </div>
+  </div>
+
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
-// CONFIGURACIÓN DE TU CLOUDINARY
-const CLOUD_NAME = "dx94uxb70"; 
-const UPLOAD_PRESET = "unsigned_preset"; 
+const CLOUD_NAME = "dcxwy7hl";
+const UPLOAD_PRESET = "placas-fisi";
 
-// ELEMENTOS DEL DOM
-const fotoInput = document.getElementById('fotoInput');
-const dropZone = document.getElementById('dropZone');
-const previewBox = document.getElementById('previewBox');
-const imgPreview = document.getElementById('imgPreview');
-const previewName = document.getElementById('previewName');
-const fileAlert = document.getElementById('fileAlert');
-const progressWrap = document.getElementById('progressWrap');
-const progressFill = document.getElementById('progressFill');
-const progressLabel = document.getElementById('progressLabel');
-const btnGenerar = document.getElementById('btnGenerar');
-const resultCard = document.getElementById('resultCard');
-const resultCanvas = document.getElementById('resultCanvas');
-const btnDescargar = document.getElementById('btnDescargar');
-const txtQrUrl = document.getElementById('txtQrUrl');
-const codigoInput = document.getElementById('codigo');
-const codigoBadge = document.getElementById('codigoBadge');
+let modoActual = 'frontal'; 
 
-let imagenSeleccionadaBase64 = null;
+const dz = document.getElementById('dropZone');
+const fi = document.getElementById('fileInput');
 
-// Mostrar insignia al escribir el código
-codigoInput.addEventListener('input', function(){
-  if(this.value.trim().length > 3) {
-    codigoBadge.style.display = 'inline-flex';
-  } else {
-    codigoBadge.style.display = 'none';
-  }
-});
-
-// Drag & Drop Handlers
-['dragenter', 'dragover'].forEach(eventName => {
-  dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.add('drag'); }, false);
-});
-['dragleave', 'drop'].forEach(eventName => {
-  dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.remove('drag'); }, false);
-});
-
-dropZone.addEventListener('drop', (e) => {
-  const dt = e.dataTransfer;
-  const files = dt.files;
-  if(files.length) procesarArchivo(files[0]);
-});
-
-fotoInput.addEventListener('change', function(){
-  if(this.files.length) procesarArchivo(this.files[0]);
-});
-
-function procesarArchivo(file) {
-  if(!file.type.startsWith('image/')){
-    showError('Por favor, selecciona únicamente un archivo de imagen válido.');
-    return;
-  }
-  fileAlert.style.display = 'none';
-  previewName.textContent = file.name;
+function cambiarModo(modo) {
+  modoActual = modo;
   
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    imagenSeleccionadaBase64 = e.target.result;
-    imgPreview.src = e.target.result;
-    previewBox.style.display = 'block';
+  const tabFrontal = document.getElementById('tabFrontal');
+  const tabTrasera = document.getElementById('tabTrasera');
+  const labelAccion = document.getElementById('labelAccion');
+  const dropTitle = document.getElementById('dropTitle');
+  const btnGenerar = document.getElementById('btnGenerar');
+  
+  document.getElementById('resultSection').classList.remove('active');
+
+  if (modo === 'frontal') {
+    tabFrontal.classList.add('active');
+    tabTrasera.classList.remove('active');
+    labelAccion.textContent = "Cargar Fondo para Cara Frontal";
+    dropTitle.textContent = "Arrastra la plantilla de tu planta aquí";
+    btnGenerar.textContent = "Generar Cara Frontal con QR";
+    btnGenerar.style.background = "linear-gradient(135deg, var(--green), var(--green-light))";
+  } else {
+    tabTrasera.classList.add('active');
+    tabFrontal.classList.remove('active');
+    labelAccion.textContent = "Cargar Fondo para Cara Trasera";
+    dropTitle.textContent = "Arrastra la plantilla posterior aquí";
+    btnGenerar.textContent = "Generar Cara Trasera (Local)";
+    btnGenerar.style.background = "linear-gradient(135deg, #2c3e50, #34495e)";
   }
-  reader.readAsDataURL(file);
 }
 
-// PROCESO PRINCIPAL AL HACER CLIC EN GENERAR
-btnGenerar.addEventListener('click', function() {
-  const nombre = document.getElementById('nombre').value.trim();
-  const codigo = codigoInput.value.trim();
+fi.addEventListener('change', function(){ handleFiles(this.files); });
+dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', function(){ dz.classList.remove('drag'); });
+dz.addEventListener('drop', function(e){ e.preventDefault(); dz.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
 
-  if(!nombre || !codigo) {
-    showError('Por favor, ingresa tu Nombre Completo y Código Universitario.');
+function handleFiles(files){
+  if(!files.length) return;
+  var file = files[0];
+  if(!file.type.match('image.*')){
+    showError('Por favor selecciona únicamente archivos de imagen.');
     return;
   }
-  if(!imagenSeleccionadaBase64) {
-    showError('Es obligatorio cargar tu foto de perfil para confeccionar la placa.');
-    return;
+  document.getElementById('fileAlert').style.display = 'none';
+  document.getElementById('previewName').textContent = file.name + " (" + (file.size/1024/1024).toFixed(2) + " MB)";
+  
+  var r = new FileReader();
+  r.onload = function(e){
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('previewBox').style.display = 'block';
+  };
+  r.readAsDataURL(file);
+}
+
+function actualizarBadge(val){
+  var b = document.getElementById('codigoBadge');
+  var t = document.getElementById('badgeText');
+  if(val.trim()){
+    b.style.display = 'inline-flex';
+    var num = parseInt(val.trim(), 10);
+    var strNum = isNaN(num) ? "00000" : ("00000" + num).slice(-5);
+    t.textContent = "FISI-" + strNum;
+  } else {
+    b.style.display = 'none';
   }
+}
 
-  // Deshabilitar botón y activar barra de carga
-  btnGenerar.disabled = true;
-  btnGenerar.textContent = 'Procesando...';
-  fileAlert.style.display = 'none';
-  progressWrap.style.display = 'block';
-  updateProgress(15, 'Subiendo tu foto a Cloudinary...');
-
-  // 1. SUBIR LA FOTO DEL ALUMNO A CLOUDINARY
-  fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      file: imagenSeleccionadaBase64,
-      upload_preset: UPLOAD_PRESET
-    })
-  })
-  .then(response => {
-    if(!response.ok) throw new Error('Error en el servidor de Cloudinary');
-    return response.json();
-  })
-  .then(data => {
-    updateProgress(60, 'Foto alojada. Generando código QR dinámico...');
-    const urlFotoCloudinary = data.secure_url;
-    
-    // 2. GENERAR EL CÓDIGO QR APUNTANDO A LA URL DE CLOUDINARY
-    QRCode.toDataURL(urlFotoCloudinary, { width: 300, margin: 2 }, function (err, qrDataUrl) {
-      if (err) {
-        showError('No se pudo generar el código QR.');
-        return;
-      }
-      
-      updateProgress(85, 'Dibujando placa unificada en el lienzo...');
-      
-      // 3. ENSAMBLAR LA PLACA UNIFICADA EN EL CANVAS
-      renderPlacaFinal(nombre, codigo, imagenSeleccionadaBase64, qrDataUrl, urlFotoCloudinary);
-    });
-  })
-  .catch(err => {
-    console.error(err);
-    showError('Error al subir la imagen. Verifica las credenciales de Cloudinary o tu internet.');
-  });
-});
-
-function updateProgress(percentage, text) {
-  progressFill.style.width = percentage + '%';
-  if(text) progressLabel.textContent = text;
+function slugify(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 }
 
 function showError(msg){
-  progressWrap.style.display = 'none';
-  fileAlert.style.display = 'block';
-  fileAlert.textContent = msg;
-  btnGenerar.disabled = false;
-  btnGenerar.textContent = 'Generar mi placa con código QR';
+  document.getElementById('progressWrap').style.display = 'none';
+  var alertEl = document.getElementById('fileAlert');
+  alertEl.style.display = 'block';
+  alertEl.textContent = msg || 'Ocurrió un error.';
+  var btn = document.getElementById('btnGenerar');
+  btn.disabled = false;
+  btn.textContent = (modoActual === 'frontal') ? "Generar Cara Frontal con QR" : "Generar Cara Trasera (Local)";
 }
 
-// FUNCIÓN PARA RENDERIZAR LA PLACA FINAL (LIENZO DE ALTA CALIDAD)
-function renderPlacaFinal(nombre, codigo, fotoSrc, qrSrc, urlOriginal) {
-  setTimeout(() => {
-    const ctx = resultCanvas.getContext('2d');
-    
-    // Definimos dimensiones fijas ideales para una placa de alta resolución
-    resultCanvas.width = 800;
-    resultCanvas.height = 1100;
-    
-    // Fondo de la Placa (Blanco Limpio con bordes ecológicos)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 800, 1100);
-    
-    // Marco exterior verde ecologico
-    ctx.strokeStyle = '#1a6b3a';
-    ctx.lineWidth = 20;
-    ctx.strokeRect(10, 10, 780, 1080);
-    
-    // Franja decorativa superior
-    ctx.fillStyle = '#e8f5ee';
-    ctx.fillRect(20, 20, 760, 140);
-    
-    // Textos Institucionales superiores
-    ctx.fillStyle = '#1a6b3a';
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 20px Inter, sans-serif';
-    ctx.fillText('UNIVERSIDAD NACIONAL DE SAN MARTÍN', 400, 70);
-    ctx.font = '600 28px "Playfair Display", Georgia, serif';
-    ctx.fillStyle = '#1a2e1a';
-    ctx.fillText('FISI — PLACA ECOLÓGICA DIGITAL', 400, 115);
-    
-    // Cargar y pintar la Foto del Alumno
-    const imgAlumno = new Image();
-    imgAlumno.onload = function() {
-      // Dibujar marco para la foto
-      ctx.strokeStyle = '#b8ddc4';
-      ctx.lineWidth = 6;
-      ctx.strokeRect(250, 200, 300, 350);
-      // Dibujar la foto escalada
-      ctx.drawImage(imgAlumno, 253, 203, 294, 344);
-      
-      // Dibujar Textos del Alumno
-      ctx.fillStyle = '#1a2e1a';
-      ctx.font = 'bold 32px Inter, sans-serif';
-      ctx.fillText(nombre.toUpperCase(), 400, 610);
-      
-      ctx.fillStyle = '#2d8a50';
-      ctx.font = '600 24px Inter, sans-serif';
-      ctx.fillText('CÓDIGO: ' + codigo.toUpperCase(), 400, 655);
-      
-      // Cargar y pintar el QR generado que apunta a Cloudinary
-      const imgQr = new Image();
-      imgQr.onload = function() {
-        ctx.drawImage(imgQr, 275, 700, 250, 250);
-        
-        // Pie de página de la Placa
-        ctx.fillStyle = '#4a6a52';
-        ctx.font = 'italic 16px Inter, sans-serif';
-        ctx.fillText('Esta placa certifica la participación activa en el programa verde FISI.', 400, 1010);
-        ctx.font = 'bold 14px Inter, sans-serif';
-        ctx.fillStyle = '#1a6b3a';
-        ctx.fillText('UNSM - TARAPOTO', 400, 1045);
-        
-        // Finalizar y mostrar resultado
-        updateProgress(100, '¡Completado!');
-        setTimeout(() => {
-          progressWrap.style.display = 'none';
-          resultCard.style.display = 'block';
-          txtQrUrl.textContent = urlOriginal;
-          
-          // Desplazar la pantalla automáticamente al resultado
-          resultCard.scrollIntoView({ behavior: 'smooth' });
-          btnGenerar.disabled = false;
-          btnGenerar.textContent = 'Generar mi placa con código QR';
-        }, 400);
-      };
-      imgQr.src = qrSrc;
+function updateProgress(pct, label){
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('progressFill').style.width = pct + '%';
+  if(label) document.getElementById('progressLabel').textContent = label;
+}
+
+function iniciarProceso(){
+  var nombre = document.getElementById('nombre').value.trim();
+  var numVal = document.getElementById('numCorrelativo').value.trim();
+  var btn = document.getElementById('btnGenerar');
+  
+  document.getElementById('fileAlert').style.display = 'none';
+  document.getElementById('resultSection').classList.remove('active');
+  
+  if(!nombre || !numVal){ showError('Por favor introduce el Nombre y el Número de Registro.'); return; }
+  if(!fi.files.length){ showError('Por favor selecciona o arrastra una imagen para esta sección.'); return; }
+  
+  btn.disabled = true;
+  btn.textContent = 'Procesando...';
+  
+  var num = parseInt(numVal, 10);
+  var codigoFormateado = "FISI-" + ("00000" + num).slice(-5);
+  var file = fi.files[0];
+
+  // 1. CARA TRASERA: PROCESO TOTALMENTE LOCAL SIN QR Y SIN CLOUDINARY
+  if (modoActual === 'trasera') {
+    updateProgress(50, 'Generando gráficos para la cara trasera...');
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      renderLienzoFinal(e.target.result, null, nombre, codigoFormateado);
     };
-    imgAlumno.src = fotoSrc;
-  }, 300);
+    reader.readAsDataURL(file);
+    return;
+  }
+  
+  // 2. CARA FRONTAL: SE SUBE LA FOTO LIMPIA A CLOUDINARY PARA CONSEGUIR LA URL DEL QR
+  updateProgress(20, 'Subiendo fondo a Cloudinary para el código QR...');
+  
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET);
+  
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', true);
+  
+  xhr.upload.onprogress = function(e){
+    if(e.lengthComputable){
+      var pct = Math.round((e.loaded / e.total) * 50) + 20;
+      updateProgress(pct, 'Guardando imagen en la nube... ' + Math.round((e.loaded/e.total)*100) + '%');
+    }
+  };
+  
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      var res = JSON.parse(xhr.responseText);
+      var urlSegura = res.secure_url; // URL que se almacena en el QR
+      
+      updateProgress(75, 'Creando código QR dinámico...');
+      
+      // Creamos el QR apuntando a la URL de Cloudinary
+      QRCode.toDataURL(urlSegura, {
+        width: 400,
+        margin: 1,
+        color: { dark: '#000000', light: '#ffffff' }
+      }, function(err, qrDataUrl) {
+        if (err) { showError('Error creando el QR.'); return; }
+        
+        updateProgress(90, 'Dibujando montaje final...');
+        
+        // Guardado histórico en LocalStorage
+        try {
+          var registros = JSON.parse(localStorage.getItem('placas_registros') || '[]');
+          var entrada = { num: num, codigo: codigoFormateado, nombre: nombre, url: urlSegura, fecha: new Date().toISOString() };
+          var existe = registros.findIndex(function(r){ return r.num === num; });
+          if(existe > -1) registros[existe] = entrada; else registros.push(entrada);
+          registros.sort(function(a,b){ return a.num - b.num; });
+          localStorage.setItem('placas_registros', JSON.stringify(registros));
+        } catch(e){}
+        
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          renderLienzoFinal(ev.target.result, qrDataUrl, nombre, codigoFormateado);
+        };
+        reader.readAsDataURL(file);
+      });
+    } else {
+      showError('Error al conectar con Cloudinary. Verifica tu preset.');
+    }
+  };
+  
+  xhr.onerror = function() { showError('Error de red al subir archivo.'); };
+  xhr.send(formData);
 }
 
-// ACCIÓN DE DESCARGA DE LA IMAGEN UNIFICADA
-btnDescargar.addEventListener('click', function(){
-  const nombre = document.getElementById('nombre').value.trim();
-  const codigo = codigoInput.value.trim().toUpperCase();
+// RENDERIZADO DEL LIENZO
+function renderLienzoFinal(imageSrc, qrSrc, nombre, codigo) {
+  setTimeout(function(){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.getElementById('resultCanvas');
+      var ctx = canvas.getContext('2d');
+      
+      canvas.width = 1011;
+      canvas.height = 638;
+      
+      // Dibujar fondo
+      ctx.drawImage(img, 0, 0, 1011, 638);
+      
+      // Imprimir Datos del Alumno
+      ctx.fillStyle = '#1a2e1a';
+      ctx.font = 'bold 28px "Inter", sans-serif';
+      ctx.fillText(nombre, 60, 528);
+      
+      ctx.fillStyle = '#4a6a52';
+      ctx.font = '500 22px "Inter", sans-serif';
+      ctx.fillText("ID: " + codigo, 60, 568);
+      
+      // El QR solo se estampa si es la Cara Frontal
+      if(modoActual === 'frontal' && qrSrc){
+        var qr = new Image();
+        qr.onload = function(){
+          ctx.drawImage(qr, canvas.width - 320, canvas.height - 320, 260, 260);
+          completarProceso();
+        };
+        qr.src = qrSrc;
+      } else {
+        completarProceso();
+      }
+    };
+    img.src = imageSrc;
+  }, 400);
+}
+
+function completarProceso(){
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('resultLabel').textContent = (modoActual === 'frontal') ? "Vista Previa — Cara Frontal (Con QR)" : "Vista Previa — Cara Trasera (Sin QR)";
+  document.getElementById('resultSection').classList.add('active');
   
-  // Limpiar el nombre para el archivo de descarga
-  const slug = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  var btn = document.getElementById('btnGenerar');
+  btn.disabled = false;
+  btn.textContent = (modoActual === 'frontal') ? "Generar Cara Frontal con QR" : "Generar Cara Trasera (Local)";
   
-  const a = document.createElement('a');
-  a.download = `placa-${slug(codigo)}-${slug(nombre)}.jpg`;
-  a.href = resultCanvas.toDataURL('image/jpeg', 0.95);
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function descargar(){
+  var nombre = document.getElementById('nombre').value.trim();
+  var numVal = document.getElementById('numCorrelativo').value.trim();
+  var num = parseInt(numVal, 10);
+  var codigoFormateado = "FISI-" + ("00000" + num).slice(-5);
+  
+  var canvas = document.getElementById('resultCanvas');
+  var a = document.createElement('a');
+  
+  var sufijoArchivo = (modoActual === 'frontal') ? '-FRONTAL-QR' : '-TRASERA';
+  
+  a.download = slugify(codigoFormateado) + '-' + slugify(nombre) + sufijoArchivo + '.jpg';
+  a.href = canvas.toDataURL('image/jpeg', 0.95);
   a.click();
-});
+}
 </script>
 </body>
 </html>
