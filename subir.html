@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Placa Ecológica — UNSM</title>
+    <style>
+        body{font-family:sans-serif;background:#f4f7f6;padding:20px;text-align:center;}
+        .card{background:white;padding:20px;max-width:500px;margin:auto;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+        input{width:100%;padding:10px;margin:10px 0;box-sizing:border-box;}
+        button{width:100%;padding:15px;background:#1a6b3a;color:white;border:none;border-radius:5px;cursor:pointer;}
+        #resultCanvas{width:100%;margin-top:20px;display:none;}
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Generador de Placas</h2>
+    <input type="text" id="nombre" placeholder="Nombre del alumno">
+    <input type="number" id="num" placeholder="Número (ej: 32)">
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="iniciarProceso()">Generar Placa</button>
+    <div id="status" style="margin-top:10px;"></div>
+    <canvas id="resultCanvas"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+
+<script>
+function iniciarProceso() {
+    const nombre = document.getElementById('nombre').value;
+    const num = document.getElementById('num').value;
+    const file = document.getElementById('fileInput').files[0];
+    const status = document.getElementById('status');
+
+    if(!nombre || !num || !file) { alert("Completa todos los campos"); return; }
+
+    status.textContent = "Procesando...";
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.getElementById('resultCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 1011; canvas.height = 638;
+            ctx.drawImage(img, 0, 0, 1011, 638);
+            ctx.fillStyle = '#1a2e1a';
+            ctx.font = 'bold 30px sans-serif';
+            ctx.fillText(nombre, 60, 528);
+            ctx.fillText("ID: FISI-" + num.padStart(5, '0'), 60, 570);
+
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('file', blob);
+                formData.append('upload_preset', 'zydvsoov');
+
+                fetch('https://api.cloudinary.com/v1_1/dcxwy7rhl/image/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    status.textContent = "QR Generado. Finalizando...";
+                    // Crear un contenedor temporal para el QR de qrcode.js
+                    const tempDiv = document.createElement('div');
+                    new QRCode(tempDiv, {
+                        text: data.secure_url,
+                        width: 260,
+                        height: 260
+                    });
+                    
+                    // Esperar un momento a que el QR se dibuje en el div
+                    setTimeout(() => {
+                        const qrImgUrl = tempDiv.querySelector('img').src;
+                        const qrImg = new Image();
+                        qrImg.onload = () => {
+                            ctx.drawImage(qrImg, 700, 320, 260, 260);
+                            canvas.style.display = 'block';
+                            status.textContent = "¡Placa lista!";
+                        };
+                        qrImg.src = qrImgUrl;
+                    }, 500);
+                })
+                .catch(err => { status.textContent = "Error: " + err; });
+            });
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>
+    };
+    reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>
